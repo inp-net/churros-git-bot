@@ -3,6 +3,21 @@
 require "webrick"
 require "churros_git_bot"
 
+# manual-mode: run once, get data from argv
+if ARGV.length == 3
+  project_id = ARGV[0]
+  mr_iid = ARGV[1]
+  clone_url = ARGV[2]
+  puts "Running in one-shot mode: 
+  - Project ID       = #{project_id}
+  - Merge request ID = #{mr_iid}
+  - Clone URL        = #{clone_url}"
+  ChurrosGitBot.update_note project_id, clone_url, mr_iid
+  exit
+end
+
+puts "Running in server mode: listening for gitlab webhooks on port 3000..."
+
 server = WEBrick::HTTPServer.new(:Port => 3000)
 
 # listen to webhooks request on /mr

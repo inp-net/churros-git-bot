@@ -20,6 +20,14 @@ docker compose up
 
 This will spin up a webserver on port `3000` that listens for Gitlab merge request webhooks, on `/mr`.
 
+### One-shot mode
+
+You can also run the bot once, for a single MR, by provinding the necessary data as command-line arguments:
+
+```
+docker compose run bot <project id> <merge request number> <project clone url>
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
