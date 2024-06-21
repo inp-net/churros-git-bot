@@ -112,7 +112,16 @@ module ChurrosGitBot
       components_paths = Dir.glob("src/lib/components/**/*.{svelte,ts}")
 
       comment_content = build_comment(build_comment_parts(pages_paths + components_paths))
-      gitlab.create_merge_request_note project_id, merge_request_id, comment_content
+      username = gitlab.user.username
+      note = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.author.username == username }.first
+
+      File.write("comment.html", comment_content.strip)
+      File.write("old_comment.html", note.body.strip) if note
+
+      if note && note.body.strip != comment_content.strip
+        gitlab.delete_merge_request_note project_id, merge_request_id, note.id 
+        gitlab.create_merge_request_note project_id, merge_request_id, comment_content
+      end
     end
   end
 end

@@ -1,6 +1,6 @@
 FROM ruby:3.0.0-alpine
 
-RUN apk add git
+RUN apk add git build-base
 
 WORKDIR /app
 

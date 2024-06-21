@@ -26,7 +26,7 @@ server.mount_proc "/mr" do |req, res|
 
   res.status = 200
   res.content_type = "application/json"
-  res.body = JSON.generate(output)
+  # res.body = JSON.generate(output)
 end
 
 trap("INT") { server.shutdown }
