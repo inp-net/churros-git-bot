@@ -1,0 +1,138 @@
+{
+  "object_kind": "merge_request",
+  "event_type": "merge_request",
+  "user": {
+    "id": 1664,
+    "name": "Ewen Le Bihan",
+    "username": "lebihae",
+    "avatar_url": "https://git.inpt.fr/uploads/-/system/user/avatar/1664/avatar.png",
+    "email": "[REDACTED]"
+  },
+  "project": {
+    "id": 6666,
+    "name": "Churros",
+    "description": "🌐",
+    "web_url": "https://git.inpt.fr/inp-net/churros",
+    "avatar_url": "https://git.inpt.fr/uploads/-/system/project/avatar/1013/logo-gold-on-blue-large-padded.png",
+    "git_ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+    "git_http_url": "https://git.inpt.fr/inp-net/churros.git",
+    "namespace": "INP-net",
+    "visibility_level": 20,
+    "path_with_namespace": "inp-net/churros",
+    "default_branch": "main",
+    "ci_config_path": null,
+    "homepage": "https://git.inpt.fr/inp-net/churros",
+    "url": "git@git.inpt.fr:inp-net/churros.git",
+    "ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+    "http_url": "https://git.inpt.fr/inp-net/churros.git"
+  },
+  "object_attributes": {
+    "assignee_id": null,
+    "author_id": 1664,
+    "created_at": "2024-06-21 00:55:18 UTC",
+    "description": "D'après le script, la MR fait passer de 2.8% houdinifié à 6.6% :p\n\n## Avant\n\n```\nLegend  __________________________________\nOK      does not import global $me or zeus\nYEP     uses Houdini\nNOPE    imports global $me or zeus\n\nOK      153 files (42.97752808988764%)\nYEP     6 files (1.6853932584269662%)\nNOPE    203 files (57.02247191011236%)\n2.8708133971291865% houdinified / houdinifiable files\n203 files to go\n```\n\n## Après\n\n```\nOK      159 files (44.7887323943662%)\nYEP     14 files (3.943661971830986%)\nNOPE    196 files (55.21126760563381%)\n6.666666666666667% houdinified / houdinifiable files\n196 files to go\n```\n\n## Fichiers\n\n```diff\n1c1\n< routes/(app)/+layout.svelte,ok\n---\n> routes/(app)/+layout.svelte,houdinified\n11c11\n< routes/(app)/bookings/+page.svelte,nope\n---\n> routes/(app)/bookings/+page.svelte,houdinified\n115c115\n< routes/+layout.svelte,nope\n---\n> routes/+layout.svelte,houdinified\n125c125\n< routes/(app)/+layout.ts,nope\n---\n> routes/(app)/+layout.ts,ok\n134d133\n< routes/(app)/bookings/+page.ts,nope\n235d233\n< routes/+layout.ts,nope\n241a240\n> lib/components/AnalyticsTracker.svelte,houdinified\n281c280\n< lib/components/CardTicket.svelte,ok\n---\n> lib/components/CardTicket.svelte,houdinified\n340c339\n< lib/components/ModalChangelog.svelte,nope\n---\n> lib/components/ModalChangelog.svelte,houdinified\n345c344\n< lib/components/NavigationSide.svelte,nope\n---\n> lib/components/NavigationSide.svelte,houdinified\n348c347\n< lib/components/OverlayQuickBookings.svelte,ok\n---\n> lib/components/OverlayQuickBookings.svelte,houdinified\n```",
+    "draft": false,
+    "head_pipeline_id": 10792,
+    "id": 1426,
+    "iid": 156,
+    "last_edited_at": "2024-06-21 01:00:14 UTC",
+    "last_edited_by_id": 1664,
+    "merge_commit_sha": null,
+    "merge_error": null,
+    "merge_params": {
+      "force_remove_source_branch": "1"
+    },
+    "merge_status": "can_be_merged",
+    "merge_user_id": null,
+    "merge_when_pipeline_succeeds": false,
+    "milestone_id": null,
+    "source_branch": "houdini2",
+    "source_project_id": 1013,
+    "state_id": 1,
+    "target_branch": "main",
+    "target_project_id": 1013,
+    "time_estimate": 0,
+    "title": "Houdinify layout and add script to get stats on houdinification",
+    "updated_at": "2024-06-21 09:09:57 UTC",
+    "updated_by_id": 1664,
+    "prepared_at": "2024-06-21 00:55:20 UTC",
+    "assignee_ids": [
+
+    ],
+    "blocking_discussions_resolved": true,
+    "detailed_merge_status": "mergeable",
+    "first_contribution": false,
+    "human_time_change": null,
+    "human_time_estimate": null,
+    "human_total_time_spent": null,
+    "labels": [
+
+    ],
+    "last_commit": {
+      "id": "8aa471b16da03db17c9c03055cdf7e69ab36887c",
+      "message": "Reapply \"build: fix build\"\n\nThis reverts commit 557d743fe906bb2d27c4f640fdee2706cd5f4bee.\n",
+      "title": "Reapply \"build: fix build\"",
+      "timestamp": "2024-06-21T08:19:57+02:00",
+      "url": "https://git.inpt.fr/inp-net/churros/-/commit/8aa471b16da03db17c9c03055cdf7e69ab36887c",
+      "author": {
+        "name": "Ewen Le Bihan",
+        "email": "[REDACTED]"
+      }
+    },
+    "reviewer_ids": [
+
+    ],
+    "source": {
+      "id": 1013,
+      "name": "Churros",
+      "description": "🌐",
+      "web_url": "https://git.inpt.fr/inp-net/churros",
+      "avatar_url": "https://git.inpt.fr/uploads/-/system/project/avatar/1013/logo-gold-on-blue-large-padded.png",
+      "git_ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+      "git_http_url": "https://git.inpt.fr/inp-net/churros.git",
+      "namespace": "INP-net",
+      "visibility_level": 20,
+      "path_with_namespace": "inp-net/churros",
+      "default_branch": "main",
+      "ci_config_path": null,
+      "homepage": "https://git.inpt.fr/inp-net/churros",
+      "url": "git@git.inpt.fr:inp-net/churros.git",
+      "ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+      "http_url": "https://git.inpt.fr/inp-net/churros.git"
+    },
+    "state": "opened",
+    "target": {
+      "id": 1013,
+      "name": "Churros",
+      "description": "🌐",
+      "web_url": "https://git.inpt.fr/inp-net/churros",
+      "avatar_url": "https://git.inpt.fr/uploads/-/system/project/avatar/1013/logo-gold-on-blue-large-padded.png",
+      "git_ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+      "git_http_url": "https://git.inpt.fr/inp-net/churros.git",
+      "namespace": "INP-net",
+      "visibility_level": 20,
+      "path_with_namespace": "inp-net/churros",
+      "default_branch": "main",
+      "ci_config_path": null,
+      "homepage": "https://git.inpt.fr/inp-net/churros",
+      "url": "git@git.inpt.fr:inp-net/churros.git",
+      "ssh_url": "git@git.inpt.fr:inp-net/churros.git",
+      "http_url": "https://git.inpt.fr/inp-net/churros.git"
+    },
+    "time_change": 0,
+    "total_time_spent": 0,
+    "url": "https://git.inpt.fr/inp-net/churros/-/merge_requests/156",
+    "work_in_progress": false
+  },
+  "labels": [
+
+  ],
+  "changes": {
+  },
+  "repository": {
+    "name": "Churros",
+    "url": "git@git.inpt.fr:inp-net/churros.git",
+    "description": "🌐",
+    "homepage": "https://git.inpt.fr/inp-net/churros"
+  }
+}

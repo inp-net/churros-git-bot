@@ -1,0 +1,7 @@
+services:
+  bot:
+    build: .
+    environment:
+      - GITLAB_PRIVATE_TOKEN=TODO
+    ports:
+      - "3000:3000"

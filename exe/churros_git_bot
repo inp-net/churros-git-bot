@@ -1,3 +1,34 @@
 #!/usr/bin/env ruby
 
+require "webrick"
 require "churros_git_bot"
+
+server = WEBrick::HTTPServer.new(:Port => 3000)
+
+# listen to webhooks request on /mr
+server.mount_proc "/mr" do |req, res|
+  if req.request_method != "POST"
+    res.status = 405
+    res["Allow"] = "POST"
+    res.body = "Method not allowed"
+    next
+  end
+
+  # get merge request id
+  input = JSON.parse(req.body)
+
+  # get project id
+  project_id = input["project"]["id"]
+  mr_iid = input["object_attributes"]["iid"]
+  clone_url = input["project"]["git_http_url"]
+
+  ChurrosGitBot.update_note project_id, clone_url, mr_iid
+
+  res.status = 200
+  res.content_type = "application/json"
+  res.body = JSON.generate(output)
+end
+
+trap("INT") { server.shutdown }
+
+server.start
