@@ -123,4 +123,35 @@ module ChurrosGitBot
       end
     end
   end
+
+  def build_failed_because_of_volta(project_id, merge_request_id)
+    project_path = gitlab.project(project_id).path_with_namespace
+    # do a GraphQL request since the ruby gem does not wrap pipelines
+    query = <<~GRAPHQL
+      query ($projectPath: ID!, $mrIID: ID!) {
+        project(fullPath: $projectPath) {
+          mergeRequest(iid: $mrIID) {
+            pipelines(first: 1) {
+              nodes {
+                job(name: "build") {
+                  status, trace {
+                    htmlSummary(lastLines: 20)
+                  }, webPath
+                }
+              }
+            }
+          }
+        }
+      }
+    GRAPHQL
+  endpoint = "https://git.inpt.fr/api/graphql"
+  response = HTTP.post(endpoint, json: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } })
+    job = response.dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
+    unless job["status"] == "FAILED" then return end
+
+    trace = job["trace"]["htmlSummary"]
+    if trace.include? "Volta error: Could not unpack"
+      gitlab.create_merge_request_note project_id, merge_request_id, "Build failed because Volta is dumb (“Volta error: Could not unpack …”) — [see logs](#{job["webPath"]})"
+    end
+  end  
 end
