@@ -30,6 +30,7 @@ PLATFORMS
 DEPENDENCIES
   churros_git_bot!
   gitlab (~> 4.20)
+  httparty (~> 0.22.0)
   json (~> 2.7)
   rake (~> 13.0)
   webrick (~> 1.8)

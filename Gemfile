@@ -10,3 +10,5 @@ gem "gitlab", "~> 4.20"
 gem "webrick", "~> 1.8"
 
 gem "json", "~> 2.7"
+
+gem "httparty", "~> 0.22.0"

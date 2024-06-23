@@ -3,6 +3,7 @@
 require_relative "churros_git_bot/version"
 require "set"
 require "gitlab"
+require "httparty"
 
 module ChurrosGitBot
   extend self
@@ -116,7 +117,7 @@ module ChurrosGitBot
       note = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.author.username == username }.first
 
       if note && note.body.strip != comment_content.strip
-        gitlab.delete_merge_request_note project_id, merge_request_id, note.id 
+        gitlab.delete_merge_request_note project_id, merge_request_id, note.id
         gitlab.create_merge_request_note project_id, merge_request_id, comment_content
       elsif !note
         gitlab.create_merge_request_note project_id, merge_request_id, comment_content
@@ -128,7 +129,7 @@ module ChurrosGitBot
     project_path = gitlab.project(project_id).path_with_namespace
     # do a GraphQL request since the ruby gem does not wrap pipelines
     query = <<~GRAPHQL
-      query ($projectPath: ID!, $mrIID: ID!) {
+      query ($projectPath: ID!, $mrIID: String!) {
         project(fullPath: $projectPath) {
           mergeRequest(iid: $mrIID) {
             pipelines(first: 1) {
@@ -144,14 +145,15 @@ module ChurrosGitBot
         }
       }
     GRAPHQL
-  endpoint = "https://git.inpt.fr/api/graphql"
-  response = HTTP.post(endpoint, json: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } })
-    job = response.dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
+    endpoint = "https://git.inpt.fr/api/graphql"
+    # response = HTTP.post(endpoint, json: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } })
+    response = HTTParty.post(endpoint, body: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } }.to_json, headers: { "Content-Type" => "application/json" })
+    job = JSON.parse(response.body).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
     unless job["status"] == "FAILED" then return end
 
     trace = job["trace"]["htmlSummary"]
     if trace.include? "Volta error: Could not unpack"
-      gitlab.create_merge_request_note project_id, merge_request_id, "Build failed because Volta is dumb (“Volta error: Could not unpack …”) — [see logs](#{job["webPath"]})"
+      gitlab.create_merge_request_note project_id, merge_request_id, "Build failed because Volta is dumb (“Volta error: Could not unpack …”) — [see logs](https://git.inpt.fr/#{job["webPath"]})"
     end
-  end  
+  end
 end
