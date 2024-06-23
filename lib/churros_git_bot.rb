@@ -12,6 +12,12 @@ module ChurrosGitBot
     Gitlab.client(endpoint: "https://git.inpt.fr/api/v4", private_token: ENV["GITLAB_PRIVATE_TOKEN"])
   end
 
+  def graphql(query, variables)
+    endpoint = "https://git.inpt.fr/api/graphql"
+    response = HTTParty.post(endpoint, body: { query: query, variables: variables }.to_json, headers: { "Content-Type" => "application/json" })
+    JSON.parse(response.body)
+  end
+
   OK = '<span title="does not import global $me or zeus" style="color: gray; font-weight: bold;">OK</span>'
   YEP = '<span title="uses Houdini" style="color: green; font-weight: bold;">YEP</span>'
   NOPE = '<span title="imports global $me or zeus" style="color: red; font-weight: bold;">NOPE</span>'
@@ -19,6 +25,34 @@ module ChurrosGitBot
   class Error < StandardError; end
 
   # Your code goes here...
+  
+
+  
+  def wait_until_current_build_job_is_done(project_id, merge_request_id)
+    is_active = true
+    while is_active 
+      query = <<~GRAPHQL
+        query ($projectPath: ID!, $mrIID: String!) {
+          project(fullPath: $projectPath) {
+            mergeRequest(iid: $mrIID) {
+              pipelines(first: 1) {
+                nodes {
+                  job(name: "build") {
+                    active
+                  }
+                }
+              }
+            }
+          }
+        }
+      GRAPHQL
+
+      project_path = gitlab.project(project_id).path_with_namespace
+      is_active = graphql(query, { projectPath: project_path, mrIID: merge_request_id }).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job", "active")
+      sleep 5 if is_active
+    end
+  end
+
 
   def imports_global_me_store(source)
     symbols_from_lib_session = Set.new
@@ -145,10 +179,8 @@ module ChurrosGitBot
         }
       }
     GRAPHQL
-    endpoint = "https://git.inpt.fr/api/graphql"
-    # response = HTTP.post(endpoint, json: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } })
-    response = HTTParty.post(endpoint, body: { query: query, variables: { projectPath: project_path, mrIID: merge_request_id } }.to_json, headers: { "Content-Type" => "application/json" })
-    job = JSON.parse(response.body).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
+    project_path = gitlab.project(project_id).path_with_namespace
+    job = graphql(query, { projectPath: project_path, mrIID: merge_request_id }).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
     unless job["status"] == "FAILED" then return end
 
     trace = job["trace"]["htmlSummary"]

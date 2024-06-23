@@ -13,6 +13,7 @@ if ARGV.length == 3
   - Merge request ID = #{mr_iid}
   - Clone URL        = #{clone_url}"
   ChurrosGitBot.update_note project_id, clone_url, mr_iid
+  ChurrosGitBot.wait_until_current_build_job_is_done project_id, mr_iid
   ChurrosGitBot.build_failed_because_of_volta project_id, mr_iid
   exit
 end
