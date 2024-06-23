@@ -168,6 +168,7 @@ module ChurrosGitBot
           mergeRequest(iid: $mrIID) {
             pipelines(first: 1) {
               nodes {
+                iid
                 job(name: "build") {
                   status, trace {
                     htmlSummary(lastLines: 20)
@@ -180,12 +181,13 @@ module ChurrosGitBot
       }
     GRAPHQL
     project_path = gitlab.project(project_id).path_with_namespace
-    job = graphql(query, { projectPath: project_path, mrIID: merge_request_id }).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0, "job")
+    pipeline = graphql(query, { projectPath: project_path, mrIID: merge_request_id }).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0)
+    job = pipeline["job"]
     unless job["status"] == "FAILED" then return end
 
     trace = job["trace"]["htmlSummary"]
     if trace.include? "Volta error: Could not unpack"
-      gitlab.create_merge_request_note project_id, merge_request_id, "Build failed because Volta is dumb (“Volta error: Could not unpack …”) — [see logs](https://git.inpt.fr/#{job["webPath"]})"
+      gitlab.create_merge_request_note project_id, merge_request_id, "Build failed because Volta is dumb (“Volta error: Could not unpack …”) — [see logs for pipeline ##{pipeline["iid"]}](https://git.inpt.fr/#{job["webPath"]})"
     end
   end
 end
