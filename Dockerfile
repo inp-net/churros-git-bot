@@ -13,6 +13,6 @@ RUN bundle install --deployment
 
 COPY . .
 
-
+RUN bundle install --deployment
 
 ENTRYPOINT ["bundle", "exec", "churros_git_bot"]
