@@ -4,9 +4,15 @@ RUN apk add git build-base
 
 WORKDIR /app
 
-COPY . .
+COPY Gemfile Gemfile
+COPY Gemfile.lock Gemfile.lock
+COPY churros_git_bot.gemspec churros_git_bot.gemspec
+COPY lib/churros_git_bot/version.rb lib/churros_git_bot/version.rb
 
 RUN bundle install --deployment
+
+COPY . .
+
 
 
 ENTRYPOINT ["bundle", "exec", "churros_git_bot"]
