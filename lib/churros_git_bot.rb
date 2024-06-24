@@ -182,7 +182,9 @@ module ChurrosGitBot
     GRAPHQL
     project_path = gitlab.project(project_id).path_with_namespace
     pipeline = graphql(query, { projectPath: project_path, mrIID: merge_request_id }).dig("data", "project", "mergeRequest", "pipelines", "nodes", 0)
+    if !pipeline then return end
     job = pipeline["job"]
+    if !job then return end
     unless job["status"] == "FAILED" then return end
 
     trace = job["trace"]["htmlSummary"]
