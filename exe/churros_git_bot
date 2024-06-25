@@ -15,6 +15,7 @@ if ARGV.length == 3
 
   should_fail = false
   ChurrosGitBot.update_houdini_progress_note project_id, clone_url, mr_iid
+  ChurrosGitBot.add_note_if_changelog_not_modified project_id, mr_iid
   should_fail = ChurrosGitBot.conflicting_migrations project_id, mr_iid
   ChurrosGitBot.wait_until_current_build_job_is_done project_id, mr_iid
   ChurrosGitBot.build_failed_because_of_volta project_id, mr_iid

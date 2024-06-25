@@ -82,6 +82,28 @@ module ChurrosGitBot
     is_ok(source) && imports_from_houdini(source)
   end
 
+  def bot_comments_on_mr(project_id, merge_request_id)
+    bot_username = gitlab.user.username
+    gitlab.merge_request_notes(project_id, merge_request_id).filter { |note| note.author.username == bot_username }
+  end
+
+  def add_note_if_changelog_not_modified(project_id, merge_request_id)
+    unless modifies_changelog(project_id, merge_request_id)
+      unless bot_comments_on_mr(project_id, merge_request_id).any? { |note| note.body.include?("CHANGELOG.md") }
+        gitlab.create_merge_request_note project_id, merge_request_id, "Remember to update the CHANGELOG.md if your changes visibly affect end users"
+      end
+    else
+      bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("CHANGELOG.md") }.each do |note|
+        gitlab.delete_merge_request_note project_id, merge_request_id, note.id
+      end
+    end
+  end
+
+  def modifies_changelog(project_id, merge_request_id)
+    changes = (gitlab.merge_request_changes project_id, merge_request_id).changes
+    changes.map { |change| change.new_path }.include? "CHANGELOG.md"
+  end
+
   def build_comment_parts(filenames)
     results = filenames.map do |filename|
       contents = File.read(filename)
@@ -145,7 +167,7 @@ module ChurrosGitBot
 
       comment_content = build_comment(build_comment_parts(pages_paths + components_paths))
       username = gitlab.user.username
-      note = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.author.username == username && note.body.include?("houdinified") }.first
+      note = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("houdinified") }.first
 
       if note && note.body.strip != comment_content.strip
         gitlab.delete_merge_request_note project_id, merge_request_id, note.id
@@ -176,8 +198,8 @@ module ChurrosGitBot
       branch = migrations_file_tree_to_hash Dir.children branch_migration_folder_path
 
       conflicts = conflicting_prisma_migrations(main, branch)
-      existing_note = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.body.include?("Prisma migrations that conflict with") }.first
-      existing_note_ok = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.body.include?("in order now") }.first
+      existing_note = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("Prisma migrations that conflict with") }.first
+      existing_note_ok = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("in order now") }.first
       if conflicts.size > 0
         puts "Detected conflicting migrations: #{conflicts}"
       end
