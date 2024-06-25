@@ -12,10 +12,13 @@ if ARGV.length == 3
   - Project ID       = #{project_id}
   - Merge request ID = #{mr_iid}
   - Clone URL        = #{clone_url}"
-  ChurrosGitBot.update_note project_id, clone_url, mr_iid
+
+  should_fail = false
+  ChurrosGitBot.update_houdini_progress_note project_id, clone_url, mr_iid
+  should_fail = ChurrosGitBot.conflicting_migrations project_id, mr_iid
   ChurrosGitBot.wait_until_current_build_job_is_done project_id, mr_iid
   ChurrosGitBot.build_failed_because_of_volta project_id, mr_iid
-  exit
+  exit should_fail ? 1 : 0
 end
 
 puts "Running in server mode: listening for gitlab webhooks on port 3000..."
@@ -39,7 +42,7 @@ server.mount_proc "/mr" do |req, res|
   mr_iid = input["object_attributes"]["iid"]
   clone_url = input["project"]["git_http_url"]
 
-  ChurrosGitBot.update_note project_id, clone_url, mr_iid
+  ChurrosGitBot.update_houdini_progress_note project_id, clone_url, mr_iid
 
   res.status = 200
   res.content_type = "application/json"

@@ -25,12 +25,10 @@ module ChurrosGitBot
   class Error < StandardError; end
 
   # Your code goes here...
-  
 
-  
   def wait_until_current_build_job_is_done(project_id, merge_request_id)
     is_active = true
-    while is_active 
+    while is_active
       query = <<~GRAPHQL
         query ($projectPath: ID!, $mrIID: String!) {
           project(fullPath: $projectPath) {
@@ -52,7 +50,6 @@ module ChurrosGitBot
       sleep 5 if is_active
     end
   end
-
 
   def imports_global_me_store(source)
     symbols_from_lib_session = Set.new
@@ -140,7 +137,7 @@ module ChurrosGitBot
     end
   end
 
-  def update_note(project_id, clone_url, merge_request_id)
+  def update_houdini_progress_note(project_id, clone_url, merge_request_id)
     clone_repo project_id, clone_url, merge_request_id
     Dir.chdir "churros/packages/app" do
       pages_paths = Dir.glob("src/routes/**/*.{svelte,ts}")
@@ -157,6 +154,88 @@ module ChurrosGitBot
         gitlab.create_merge_request_note project_id, merge_request_id, comment_content
       end
     end
+  end
+
+  def conflicting_migrations(project_id, merge_request_id)
+    Dir.chdir "churros" do
+      `git checkout main`
+      main = migrations_file_tree_to_hash Dir.children(
+        if Dir.exist? "packages/db"
+          "packages/db/prisma/migrations/"
+        else
+          "packages/api/prisma/migrations/"
+        end
+      )
+
+      `git checkout #{gitlab.merge_request(project_id, merge_request_id).source_branch}`
+      branch_migration_folder_path = if Dir.exist? "packages/db"
+          "packages/db/prisma/migrations/"
+        else
+          "packages/api/prisma/migrations/"
+        end
+      branch = migrations_file_tree_to_hash Dir.children branch_migration_folder_path
+
+      conflicts = conflicting_prisma_migrations(main, branch)
+      existing_note = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.body.include?("Prisma migrations that conflict with") }.first
+      existing_note_ok = (gitlab.merge_request_notes project_id, merge_request_id).filter { |note| note.body.include?("in order now") }.first
+      if conflicts.size > 0
+        puts "Detected conflicting migrations: #{conflicts}"
+      end
+
+      if conflicts.size > 0 and not existing_note
+        puts "Creating note for conflicting migrations"
+        project_url = gitlab.project(project_id).web_url
+        commit_hash = `git rev-parse HEAD`.strip()
+        gitlab.create_merge_request_note(project_id, merge_request_id,
+                                         "
+## Warning. The merge request contains Prisma migrations that conflict with `main`: 
+        
+#{conflicts.map do |date, desc|
+          "- [`#{to_prisma_migration_dirname date, desc}`](#{project_url}/-/blob/#{commit_hash}/#{branch_migration_folder_path}/#{to_prisma_migration_dirname date, desc})"
+        end.join("\n")}
+
+### What???
+
+Merging this branch would leave Prisma with some migrations that were not applied in production. But migrations are supposed to be applied in order, so Prisma would not be able to apply them. 
+
+### What to do?
+
+1. Delete all the mentioned migration folders inside of #{branch_migration_folder_path} in this branch. You don't lose any work that way, because your Prisma schema stores the what you changed. If you edited manually the migrations, be sure to keep a copy of your edits and apply them again
+1. Create a new migration Prisma migration
+1. That's it :)
+
+        ")
+      elsif existing_note and not existing_note_ok and conflicts.size == 0
+        gitlab.create_merge_request_note project_id, merge_request_id, "All Prisma migrations are in order now"
+      end
+
+      return conflicts.size > 0
+    end
+  end
+
+  def parse_prisma_migration_dirname(dirname)
+    datestring = dirname.split("_").first
+    description = (dirname.split("_")[1..-1].join("_").split(".").first || "").gsub("_", " ")
+    year, month, day, hour, minute, second = datestring[0..3].to_i, datestring[4..5].to_i, datestring[6..7].to_i, datestring[8..9].to_i, datestring[10..11].to_i, datestring[12..13].to_i
+    [Time.new(year, month, day, hour, minute, second), description]
+  end
+
+  def to_prisma_migration_dirname(date, description)
+    date.strftime("%Y%m%d%H%M%S") + "_" + description.gsub(" ", "_") + ".sql"
+  end
+
+  def migrations_file_tree_to_hash(tree)
+    (tree.filter { |dirname| dirname != "migration_lock.toml" }.map do |dirname|
+      begin
+        parse_prisma_migration_dirname dirname
+      rescue
+        ["", ""]
+      end
+    end).to_h.filter { |date, description| date != "" }
+  end
+
+  def conflicting_prisma_migrations(main, branch)
+    branch.filter { |date, description| !main.keys.include? date and date < main.keys.max }
   end
 
   def build_failed_because_of_volta(project_id, merge_request_id)
