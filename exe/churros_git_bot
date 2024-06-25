@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require "webrick"
 require "churros_git_bot"
 
 # manual-mode: run once, get data from argv
