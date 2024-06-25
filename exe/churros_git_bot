@@ -14,10 +14,17 @@ if ARGV.length == 3
   - Clone URL        = #{clone_url}"
 
   should_fail = false
+  puts "Computing houdinification progress"
   ChurrosGitBot.update_houdini_progress_note project_id, clone_url, mr_iid
+  puts "Checking if changelog was modified"
   ChurrosGitBot.add_note_if_changelog_not_modified project_id, mr_iid
+  puts "Checking if there are conflicting Prisma migrations"
   should_fail = ChurrosGitBot.conflicting_migrations project_id, mr_iid
+  puts "Checking if new API modules' READMEs are filled"
+  should_fail = should_fail or not ChurrosGitBot.new_api_modules_readme_is_filled project_id, mr_iid
+  puts "Waiting for the current build job to finish..."
   ChurrosGitBot.wait_until_current_build_job_is_done project_id, mr_iid
+  puts "Checking if the build failed because of Volta unpack errors"
   ChurrosGitBot.build_failed_because_of_volta project_id, mr_iid
   exit should_fail ? 1 : 0
 end

@@ -99,6 +99,29 @@ module ChurrosGitBot
     end
   end
 
+  def new_api_modules_readme_is_filled(project_id, merge_request_id)
+    changes = gitlab.merge_request_changes project_id, merge_request_id
+    new_files = changes.changes.map { |change| change.new_path }
+    Dir.chdir "churros" do
+      all_new_filled = !new_files.filter { |new_file| new_file.start_with?("packages/api/src/modules/") and new_file.end_with? "README.md" }.any? do |readme|
+        contents = File.open(readme).read
+        contents.strip.empty? or contents.include? "TODO: "
+      end
+
+      if all_new_filled
+        note = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("README.md of new API module") }.first
+        if note
+          gitlab.delete_merge_request_note project_id, merge_request_id, note.id
+        end
+      else
+        unless bot_comments_on_mr(project_id, merge_request_id).any? { |note| note.body.include?("README.md of new API module") }
+          gitlab.create_merge_request_note project_id, merge_request_id, "Remember to fill the README.md of new API module(s)"
+        end
+      end
+      return all_new_filled
+    end
+  end
+
   def modifies_changelog(project_id, merge_request_id)
     changes = (gitlab.merge_request_changes project_id, merge_request_id).changes
     changes.map { |change| change.new_path }.include? "CHANGELOG.md"
