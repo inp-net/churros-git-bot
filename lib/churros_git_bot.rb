@@ -51,7 +51,7 @@ module ChurrosGitBot
     end
   end
 
-  def imports_global_me_store(source)
+  def imports_global_me_store(source, filename)
     symbols_from_lib_session = Set.new
 
     source.each_line do |line|
@@ -63,23 +63,33 @@ module ChurrosGitBot
       end
     end
 
-    symbols_from_lib_session.include?("me")
+    result = symbols_from_lib_session.include?("me")
+    if result
+      puts "Found global $me import in #{filename}"
+    end
+    result
   end
 
-  def imports_zeus(source)
-    source.match(/^\s*import.+from\s+(["'])\$lib\/zeus(?:\.js)?\1/m)
+  def imports_zeus(source, filename)
+    if source.match(/^\s*import.+from\s+(["'])\$lib\/zeus(?:\.js)?\1/m)
+      puts "Found global zeus import in #{filename}"
+      true
+    else
+      false
+    end
   end
 
-  def imports_from_houdini(source)
-    source.match(/^\s*import.+from\s+(["'])(?:\.\/)?\$houdini\1/m)
+  def imports_from_houdini(source, filename)
+    if source.match(/^\s*import.+from\s+(["'])(?:\.\/)?\$houdini\1/m)
+      puts "Found Houdini import in #{filename}"
+      true
+    else
+      false
+    end
   end
 
-  def is_ok(source)
-    !imports_global_me_store(source) && !imports_zeus(source)
-  end
-
-  def is_houdinified(source)
-    is_ok(source) && imports_from_houdini(source)
+  def is_ok(source, filename)
+    !imports_global_me_store(source, filename) && !imports_zeus(source, filename)
   end
 
   def bot_comments_on_mr(project_id, merge_request_id)
@@ -130,14 +140,17 @@ module ChurrosGitBot
   def build_comment_parts(filenames)
     results = filenames.map do |filename|
       contents = File.read(filename)
-      houdinified = is_houdinified(contents)
-      ok = is_ok(contents)
-      { houdinified: houdinified, ok: ok, filename: filename }
+      ok = is_ok(contents, filename)
+      houdinified = ok && imports_from_houdini(contents, filename)
+      result = { houdinified: houdinified, ok: ok, filename: filename }
+      pp result
+      result
     end
 
     def count_if(arr, &predicate)
       arr.count(&predicate)
     end
+
 
     ok_count = count_if(results) { |result| result[:ok] }
     houdinified_count = count_if(results) { |result| result[:houdinified] }
