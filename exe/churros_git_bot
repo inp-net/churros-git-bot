@@ -20,7 +20,7 @@ if ARGV.length == 3
   puts "Checking if there are conflicting Prisma migrations"
   should_fail = ChurrosGitBot.conflicting_migrations project_id, mr_iid
   puts "Checking if new API modules' READMEs are filled"
-  should_fail = should_fail or not ChurrosGitBot.new_api_modules_readme_is_filled project_id, mr_iid
+  should_fail = should_fail || !ChurrosGitBot.new_api_modules_readme_is_filled(project_id, mr_iid)
   puts "Waiting for the current build job to finish..."
   ChurrosGitBot.wait_until_current_build_job_is_done project_id, mr_iid
   puts "Checking if the build failed because of Volta unpack errors"
