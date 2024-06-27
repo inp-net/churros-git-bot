@@ -233,6 +233,12 @@ module ChurrosGitBot
         end
       branch = migrations_file_tree_to_hash Dir.children branch_migration_folder_path
 
+      puts "Migrations on main:"
+      pp main
+      puts "Migrations on branch:"
+      pp branch
+      
+
       conflicts = conflicting_prisma_migrations(main, branch)
       existing_note = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("Prisma migrations that conflict with") }.first
       existing_note_ok = bot_comments_on_mr(project_id, merge_request_id).filter { |note| note.body.include?("in order now") }.first
